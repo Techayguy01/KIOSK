@@ -2,85 +2,127 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const { createClient } = require('redis');
-const { v4: uuidv4 } = require('uuid');
+const fs = require('fs-extra');
+const path = require('path');
+const OpenAI = require('openai');
+const gTTS = require('gtts');
 
 const app = express();
 const PORT = 8000;
 
-// 1. MIDDLEWARE
-app.use(cors()); // Allow all origins for dev
-app.use(express.json());
+// 1. SAFE CONFIGURATION
+if (!process.env.GROQ_API_KEY) {
+    console.error("❌ CRITICAL ERROR: GROQ_API_KEY is missing in .env file!");
+    process.exit(1);
+}
 
-// 2. SETUP REDIS (The Session Store)
-const redisClient = createClient({ url: 'redis://localhost:6379' });
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
-// Connect to Redis immediately
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log("✅ Connected to Redis");
-    } catch (e) {
-        console.log("⚠️  Redis not running (Docker up?)");
-    }
-})();
-
-// 3. SETUP FILE UPLOAD (Multer)
-// We will store audio in memory for now to pass to AI later
-const upload = multer({ storage: multer.memoryStorage() });
-
-// 4. ROUTES
-
-// Health Check
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date() });
+const openai = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1"
 });
 
-// THE KIOSK ENDPOINT (Replaces Postman)
+app.use(cors());
+app.use(express.json());
+app.use('/audio', express.static(path.join(__dirname, 'public')));
+
+// Ensure public folder exists on startup
+fs.ensureDirSync(path.join(__dirname, 'public'));
+const upload = multer({ dest: 'uploads/' });
+
+// HELPER: Generate Audio
+const generateAudioFree = (text, filepath) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const gtts = new gTTS(text, 'en');
+            gtts.save(filepath, (err) => {
+                if (err) reject(err);
+                else resolve(filepath);
+            });
+        } catch (e) { reject(e); }
+    });
+};
+
 app.post('/api/v1/voice', upload.single('audio_blob'), async (req, res) => {
+    console.log("\n--- 🎤 NEW REQUEST START ---");
+
+    // STEP 0: VALIDATE UPLOAD
+    if (!req.file) {
+        console.error("❌ Error: No file uploaded from Frontend");
+        return res.status(400).json({ error: "No audio file received" });
+    }
+
+    let audioPath = req.file.path; // Original random name
+
     try {
-        console.log("🎤 Voice Request Received");
-        
-        // 1. Check if file exists
-        if (!req.file) {
-            console.log("❌ No audio file found");
-            // For now, we allow it to proceed for testing, 
-            // but in production, we would return 400.
-        } else {
-            console.log(`📦 Audio Size: ${req.file.size} bytes`);
+        // --- FIX STARTS HERE: RENAME FILE TO ADD .wav ---
+        // Groq requires the file to have a valid extension (.wav, .mp3, etc.)
+        const newPath = req.file.path + '.wav';
+        await fs.rename(req.file.path, newPath);
+        audioPath = newPath; // Update variable to use the new path
+        console.log("1️⃣  File saved as:", audioPath);
+        // ------------------------------------------------
+
+        // STEP 1: TRANSCRIBE (STT)
+        console.log("⏳ Sending to Groq Whisper...");
+        const transcription = await openai.audio.transcriptions.create({
+            file: fs.createReadStream(audioPath), // Use the .wav file
+            model: "whisper-large-v3",
+            response_format: "json",
+            language: "en"
+        });
+        const userText = transcription.text || "(Silence)";
+        console.log("✅ User Said:", userText);
+
+        // STEP 2: THINK (LLM)
+        console.log("⏳ Sending to Groq Llama...");
+        const chatCompletion = await openai.chat.completions.create({
+            model: "llama-3.1-8b-instant",
+            messages: [
+                { role: "system", content: "You are a Hotel Kiosk. Respond in 10 words or less. If the user says 'Goodbye' or 'Stop', reply with 'Goodbye' and nothing else." },
+                { role: "user", content: userText }
+            ],
+        });
+        const aiText = chatCompletion.choices[0].message.content;
+        console.log("✅ AI Replied:", aiText);
+
+        // STEP 3: SPEAK (TTS)
+        const audioFileName = `response_${Date.now()}.mp3`;
+        const audioFilePath = path.join(__dirname, 'public', audioFileName);
+        let audioUrl = null;
+
+        try {
+            console.log("⏳ Generating Audio...");
+            await generateAudioFree(aiText, audioFilePath);
+            audioUrl = `http://localhost:${PORT}/audio/${audioFileName}`;
+            console.log("✅ Audio Ready:", audioUrl);
+        } catch (ttsErr) {
+            console.error("⚠️ TTS Failed (Skipping audio):", ttsErr.message);
         }
 
-        const sessionId = req.body.session_id || 'unknown_session';
-        
-        // 2. TODO: Send req.file.buffer to OpenAI Whisper (Next Step)
-        
-        // 3. TODO: Send text to LLM (Next Step)
+        // CLEANUP: Delete the temp .wav file
+        await fs.unlink(audioPath);
 
-        // 4. MOCK RESPONSE (Matching your Postman Contract)
-        // This makes the frontend "Happy" immediately.
-        const responseData = {
+        res.json({
             status: "success",
             data: {
-                intent: "check_in",
-                transcript: "I want to check in (Processed by Node.js)", 
-                text_response: "Hello from the Real Backend! I received your audio.",
-                audio_url: "https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav",
-                ui_action: "show_keypad"
+                transcript: userText,
+                text_response: aiText,
+                audio_url: audioUrl
             }
-        };
-
-        // Simulate AI Latency (1 second)
-        setTimeout(() => {
-            res.json(responseData);
-        }, 1000);
+        });
 
     } catch (error) {
-        console.error("Server Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        console.error("❌ SERVER CRASHED AT STEP:", error.message);
+
+        // Detailed error for debugging
+        if (error.response) console.error("Groq API Error Data:", error.response.data);
+
+        // Cleanup file if it exists (try both original and new path)
+        if (await fs.pathExists(audioPath)) await fs.unlink(audioPath);
+        if (req.file && await fs.pathExists(req.file.path)) await fs.unlink(req.file.path);
+
+        res.status(500).json({ error: error.message });
     }
 });
 
-// 5. START SERVER
-app.listen(PORT, () => {
-    console.log(`🚀 HMS Backend running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
