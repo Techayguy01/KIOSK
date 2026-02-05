@@ -1,0 +1,81 @@
+/* Industrial Grade Glassmorphism */
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.room-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 30px;
+    text-align: left;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover/Touch State - The "Glow" */
+.room-card:active,
+.room-card:hover {
+    background: rgba(0, 112, 243, 0.1);
+    border-color: var(--accent-blue);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 112, 243, 0.2);
+}
+
+.room-card.selected {
+    background: rgba(0, 112, 243, 0.2);
+    border-color: #0070f3;
+    box-shadow: 0 0 30px rgba(0, 112, 243, 0.4);
+}
+
+.room-card.occupied {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
+.room-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.room-type {
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+}
+
+.room-price {
+    margin-top: 20px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Status Indicator Dot */
+.status-indicator {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00ff88;
+    box-shadow: 0 0 10px #00ff88;
+}
+
+.status-indicator.occupied {
+    background: #ff4d4f;
+    box-shadow: none;
+}

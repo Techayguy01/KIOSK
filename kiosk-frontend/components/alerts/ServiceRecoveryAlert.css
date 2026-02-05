@@ -1,0 +1,91 @@
+.error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.error-modal {
+    background: #111;
+    border: 2px solid #ff4d4d;
+    /* Urgent but clean */
+    padding: 40px;
+    border-radius: 30px;
+    max-width: 500px;
+    text-align: center;
+    color: white;
+    animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.error-icon {
+    width: 60px;
+    height: 60px;
+    background: #ff4d4d;
+    color: white;
+    border-radius: 50%;
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 60px;
+    margin: 0 auto 20px;
+}
+
+.recovery-action-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 25px 0;
+}
+
+.eta-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 5px 15px;
+    background: #0070f3;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.retry-btn {
+    padding: 15px;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.staff-btn {
+    padding: 15px;
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

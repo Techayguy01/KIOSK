@@ -1,0 +1,92 @@
+.payment-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.payment-header h2 {
+    margin-bottom: 10px;
+}
+
+.payment-header strong {
+    color: #0070f3;
+    font-size: 1.5rem;
+}
+
+.payment-methods {
+    margin: 40px 0;
+    padding: 30px;
+    background: rgba(0, 112, 243, 0.05);
+    border-radius: 20px;
+    border: 2px dashed rgba(0, 112, 243, 0.3);
+}
+
+/* Trust Signals styling */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 12px;
+    border-radius: 50px;
+    opacity: 0.8;
+}
+
+/* Button with state feedback */
+.pay-button {
+    width: 100%;
+    padding: 20px;
+    font-size: 1.2rem;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.pay-button.READY {
+    background: #0070f3;
+    color: white;
+}
+
+.pay-button.PROCESSING {
+    background: #333;
+    color: #888;
+    cursor: wait;
+}
+
+.pay-button.SUCCESS {
+    background: #28a745;
+    color: white;
+}
+
+/* Progress bar for perceived wait time */
+.payment-loading-bar {
+    width: 100%;
+    height: 4px;
+    background: #222;
+    margin-top: 20px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #0070f3;
+    width: 0%;
+    animation: fillProgress 4s linear;
+}
+
+@keyframes fillProgress {
+    to {
+        width: 100%;
+    }
+}
