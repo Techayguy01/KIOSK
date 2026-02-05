@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: hms_password
       POSTGRES_DB: hms_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped

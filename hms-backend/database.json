@@ -1,0 +1,23 @@
+{
+  "kiosk_config": {
+    "hotel_name": "Grand Budapest Hotel",
+    "kiosk_id": "kiosk_001",
+    "status": "online"
+  },
+  "bookings": [
+    {
+      "booking_id": "1001",
+      "guest_name": "John Wick",
+      "room_number": "404",
+      "check_in_date": "2026-02-04",
+      "status": "checked_in"
+    },
+    {
+      "booking_id": "1002",
+      "guest_name": "Tony Stark",
+      "room_number": "Penthouse",
+      "check_in_date": "2026-02-05",
+      "status": "checked_in"
+    }
+  ]
+}

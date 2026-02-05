@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contains API keys!)
+.env
+.env.local
+.env.*.local
+
+# Generated audio files (TTS output)
+public/*.mp3
+public/*.wav
+
+# Temporary uploads from users
+uploads/
+
+# Test files
+test_*.wav
+test_*.js
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
