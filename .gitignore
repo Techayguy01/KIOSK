@@ -95,3 +95,5 @@ postgres_data/
 *.p12
 *.pfx
 secrets/
+.env
+
